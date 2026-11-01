@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FPV Sim</title>
+<meta name="description" content="FPV drone simulator for Windows and Android: 12 maps, 5 real drone classes, multiplayer, VR goggles and a replay editor. Free download." />
+<meta property="og:title" content="FPV Sim: FPV drone simulator" />
+<meta property="og:description" content="12 maps, 5 drones, multiplayer, VR goggles and a replay editor. Windows and Android." />
+<meta property="og:image" content="img/cover.jpg" />
+<link rel="icon" href="img/favicon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --bg: #0b0f14; --panel: #121922; --panel2: #18212c; --line: rgba(255, 255, 255, 0.1);
+    --text: #e8eef5; --muted: #8a99aa; --accent: #ff6a1a; --good: #3ddc84;
+    --font: 'Rajdhani', system-ui, sans-serif; --mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 18px/1.55 var(--font); }
+  a { color: var(--accent); }
+  code, kbd { font-family: var(--mono); font-size: 0.82em; background: var(--panel2); padding: 2px 6px; border-radius: 6px; }
+  header.top { position: sticky; top: 0; z-index: 10; display: flex; gap: 22px; align-items: center; padding: 12px 24px; background: rgba(11, 15, 20, 0.86); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 24px; letter-spacing: 0.04em; text-decoration: none; color: var(--text); }
+  .logo img { width: 30px; height: 30px; border-radius: 7px; }
+  .logo span { color: var(--accent); }
+  header.top nav { display: flex; gap: 18px; flex: 1; flex-wrap: wrap; }
+  header.top nav a { color: var(--muted); text-decoration: none; font-weight: 600; }
+  header.top nav a:hover { color: var(--text); }
+  .btn { display: inline-flex; align-items: center; gap: 10px; padding: 13px 22px; border-radius: 12px; font-weight: 700; font-size: 19px; text-decoration: none; border: 1px solid var(--line); background: var(--panel); color: var(--text); transition: transform 0.15s, border-color 0.15s; }
+  .btn:hover { transform: translateY(-2px); border-color: var(--accent); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #140a03; }
+  .btn small { font-weight: 500; opacity: 0.75; font-size: 14px; }
+  .btn.sm { padding: 8px 14px; font-size: 16px; }
+  .hero { position: relative; min-height: 78vh; display: flex; align-items: flex-end; overflow: hidden; }
+  .hero .bg { position: absolute; inset: 0; background-size: cover; background-position: center; transition: opacity 1.4s ease; opacity: 0; transform: scale(1.06); animation: drift 22s ease-in-out infinite alternate; }
+  .hero .bg.on { opacity: 1; }
+  @keyframes drift { from { transform: scale(1.06) translateX(0); } to { transform: scale(1.12) translateX(-2%); } }
+  .hero::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(11, 15, 20, 0.15) 0%, rgba(11, 15, 20, 0.55) 55%, var(--bg) 100%); }
+  .hero .inner { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; padding: 0 24px 56px; width: 100%; }
+  .hero h1 { font-size: clamp(44px, 8vw, 92px); line-height: 0.95; margin: 0 0 12px; text-shadow: 0 4px 30px rgba(0, 0, 0, 0.5); }
+  .hero h1 em { color: var(--accent); font-style: normal; }
+  .hero p { font-size: clamp(19px, 2.4vw, 24px); max-width: 720px; margin: 0 0 26px; color: #d6dee8; text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6); }
+  .btns { display: flex; gap: 12px; flex-wrap: wrap; }
+  .meta { color: var(--muted); font-size: 15px; margin-top: 12px; }
+  main { max-width: 1100px; margin: 0 auto; padding: 0 24px 60px; }
+  section { padding: 46px 0 6px; }
+  section h2 { font-size: clamp(30px, 4vw, 40px); margin: 0 0 6px; }
+  section > p.lead { color: var(--muted); margin: 0 0 22px; font-size: 20px; }
+  .features { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+  .feat { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 18px 20px; }
+  .feat .ic { font-size: 30px; }
+  .feat h3 { margin: 6px 0 4px; font-size: 22px; }
+  .feat p { margin: 0; color: var(--muted); }
+  .maps { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 14px; }
+  .map { position: relative; border-radius: 14px; overflow: hidden; border: 1px solid var(--line); background: var(--panel); }
+  .map img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; display: block; transition: transform 0.4s; }
+  .map:hover img { transform: scale(1.05); }
+  .map div { padding: 10px 14px 14px; }
+  .map b { font-size: 20px; }
+  .map p { margin: 2px 0 0; color: var(--muted); font-size: 15px; line-height: 1.4; }
+  .drones { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+  .drone { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+  .drone b { font-size: 20px; }
+  .drone p { margin: 4px 0 0; color: var(--muted); font-size: 15px; }
+  .split { display: grid; grid-template-columns: 1.1fr 1fr; gap: 26px; align-items: center; }
+  .split img { width: 100%; border-radius: 16px; border: 1px solid var(--line); }
+  .split ul { padding-left: 20px; }
+  .split li { margin: 6px 0; }
+  .band { margin-top: 30px; background: linear-gradient(120deg, #24130a, #121922 60%); border: 1px solid rgba(255, 106, 26, 0.35); border-radius: 20px; padding: 28px; display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+  .band h2 { margin: 0 0 4px; }
+  .band p { margin: 0; color: #c9d3de; }
+  .band .grow { flex: 1; min-width: 260px; }
+  .dl { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 14px; }
+  .dlcard { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 20px; display: flex; flex-direction: column; gap: 10px; }
+  .dlcard h3 { margin: 0; font-size: 24px; }
+  .dlcard p, .dlcard li { color: var(--muted); margin: 0; }
+  .dlcard ul { margin: 0; padding-left: 18px; }
+  .dlcard .btn { align-self: flex-start; margin-top: auto; }
+  table { width: 100%; border-collapse: collapse; background: var(--panel); border-radius: 12px; overflow: hidden; border: 1px solid var(--line); }
+  th, td { text-align: left; padding: 9px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; background: var(--panel2); }
+  details { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; margin-bottom: 10px; }
+  summary { cursor: pointer; font-weight: 700; }
+  footer { color: var(--muted); text-align: center; padding: 30px; border-top: 1px solid var(--line); }
+  @media (max-width: 760px) {
+    header.top { flex-wrap: wrap; gap: 8px 16px; padding: 10px 16px; }
+    header.top .btn { display: none; }
+    main, .hero .inner { padding-left: 16px; padding-right: 16px; }
+    .split { grid-template-columns: 1fr; }
+    .hero { min-height: 70vh; }
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="logo" href="#"><img src="img/icon.png" alt="" />FPV<span>SIM</span></a>
+  <nav>
+    <a href="#features">Features</a>
+    <a href="#maps">Maps</a>
+    <a href="#multiplayer">Multiplayer</a>
+    <a href="#download">Download</a>
+    <a href="#faq">FAQ</a>
+  </nav>
+  <a class="btn sm primary" href="#download">Download</a>
+</header>
+
+<div class="hero" id="hero">
+  <div class="inner">
+    <h1>Fly <em>real FPV.</em><br />Crash for free.</h1>
+    <p>A drone simulator with a 1 kHz flight model, five real drone classes and twelve hand-built maps, from a Tiny Whoop in a living room to a 7" long-range quad over a mountain lake. Fly alone, with friends, or in your VR headset.</p>
+    <div class="btns">
+      <a class="btn primary" href="https://github.com/guyka2212/fpv-sim/releases/latest/download/FPV-Sim-Setup.exe">⬇ Download for Windows <small>installer</small></a>
+      <a class="btn" href="https://github.com/guyka2212/fpv-sim/releases/latest/download/FPV-Sim.apk">⬇ Android <small>APK</small></a>
+      <a class="btn" href="https://guyka2212.github.io/flysim-servers/">🌐 Host a server</a>
+    </div>
+    <div class="meta" id="version">Free · Windows 10 / 11 (64-bit) · Android 8+</div>
+  </div>
+</div>
+
+<main>
+  <section id="features">
+    <h2>Built like the real thing</h2>
+    <p class="lead">Physics first: motors, props, batteries and wind are simulated, so it flies the way a quad flies.</p>
+    <div class="features">
+      <div class="feat"><div class="ic">🛩️</div><h3>Real flight model</h3><p>1 kHz physics with motor lag, prop wash, ground effect, battery sag and gusty wind. Acro, Angle and Horizon modes with Betaflight rates.</p></div>
+      <div class="feat"><div class="ic">🎮</div><h3>Your controller</h3><p>Xbox and PlayStation pads, RC radios over USB (EdgeTX, OpenTX), DJI remotes, or the keyboard. A setup wizard calibrates any of them.</p></div>
+      <div class="feat"><div class="ic">👥</div><h3>Multiplayer</h3><p>Join a friend's server, vote for a map, fly together with names over the drones, chat and collisions. Hosting is free and easy.</p></div>
+      <div class="feat"><div class="ic">🥽</div><h3>VR goggles</h3><p>Fly in a Meta Quest over Link or Air Link: the FPV feed sits in front of your eyes like real goggles.</p></div>
+      <div class="feat"><div class="ic">🎬</div><h3>Record and edit</h3><p>Record a flight, then cut it, pick the camera, add music, switch the OSD on or off and export an MP4. Replays never show the video breakup.</p></div>
+      <div class="feat"><div class="ic">🌊</div><h3>Living worlds</h3><p>Water you can drown in and that ripples under your prop wash, race cars lapping the circuits, a map view and teleports.</p></div>
+    </div>
+  </section>
+
+  <section id="maps">
+    <h2>Twelve maps</h2>
+    <p class="lead">Each one built for a style of flying: freestyle gaps, race lines, cinematic cruising and long range.</p>
+    <div class="maps" id="maplist"></div>
+  </section>
+
+  <section id="drones">
+    <h2>Five drones</h2>
+    <p class="lead">Real classes with their own weight, motors, props, batteries and rates.</p>
+    <div class="drones">
+      <div class="drone"><b>Freestyle 5"</b><p>True-X 225 mm, 2207 motors, 6S. Punchy and precise: dives, gaps and power loops.</p></div>
+      <div class="drone"><b>Racer 5"</b><p>Light, stiff and fast, with a high camera angle for full-throttle race lines.</p></div>
+      <div class="drone"><b>Tiny Whoop 65</b><p>Ducted 1S whoop that bounces off walls. Made for the House map.</p></div>
+      <div class="drone"><b>Cinewhoop 3"</b><p>Ducted and smooth for slow, cinematic shots through the town.</p></div>
+      <div class="drone"><b>Long Range 7"</b><p>Efficient and calm for kilometres of mountain surfing and cruising.</p></div>
+    </div>
+  </section>
+
+  <section id="multiplayer">
+    <div class="split">
+      <div>
+        <h2>Fly with your friends</h2>
+        <ul>
+          <li>Open <b>Multiplayer</b>, choose a name, paste a server address and join.</li>
+          <li>See who's in the lobby. The owner presses <b>Start</b>, everyone <b>votes for a map</b>.</li>
+          <li>Fly together: names over the drones, chat with <kbd>T</kbd>, bump into each other.</li>
+          <li>Recordings keep every pilot, and the replay editor can show their names.</li>
+        </ul>
+      </div>
+      <img src="img/stadium.jpg" alt="The stadium map" loading="lazy" />
+    </div>
+    <div class="band">
+      <div class="grow">
+        <h2>Host your own server</h2>
+        <p>One download for Windows or Linux, like a Minecraft server: pick a port, share the address or a free playit.gg tunnel, and manage everything from the console or an admin window.</p>
+      </div>
+      <a class="btn primary" href="https://guyka2212.github.io/flysim-servers/">Go to the server website →</a>
+    </div>
+  </section>
+
+  <section id="download">
+    <h2>Download</h2>
+    <p class="lead">Free. No account, no internet needed to fly (only for multiplayer).</p>
+    <div class="dl">
+      <div class="dlcard">
+        <h3>🪟 Windows</h3>
+        <ul><li>Windows 10 or 11, 64-bit</li><li>Any GPU from the last ~8 years (GTX 1050 class or better)</li><li>About 450 MB</li></ul>
+        <p>Run <b>FPV-Sim-Setup.exe</b>. If Windows SmartScreen says it protected your PC, click <b>More info → Run anyway</b> (the installer isn't code-signed).</p>
+        <a class="btn primary" href="https://github.com/guyka2212/fpv-sim/releases/latest/download/FPV-Sim-Setup.exe">⬇ FPV-Sim-Setup.exe</a>
+      </div>
+      <div class="dlcard">
+        <h3>🤖 Android</h3>
+        <ul><li>Android 8 or newer, landscape</li><li>A USB controller via an OTG adapter (type-A to type-C), or a DJI remote</li><li>About 100 MB</li></ul>
+        <p>Download <b>FPV-Sim.apk</b>, open it and allow installing from this source. Plug in your controller and fly.</p>
+        <a class="btn" href="https://github.com/guyka2212/fpv-sim/releases/latest/download/FPV-Sim.apk">⬇ FPV-Sim.apk</a>
+      </div>
+      <div class="dlcard">
+        <h3>🌐 Server</h3>
+        <ul><li>Windows or Linux (x64 / ARM)</li><li>Settings file, EULA, console commands, admin window</li><li>playit.gg tunnel guide</li></ul>
+        <p>Everything about running your own multiplayer server is on its own site.</p>
+        <a class="btn" href="https://guyka2212.github.io/flysim-servers/">Server website →</a>
+      </div>
+    </div>
+    <p class="meta">All versions: <a href="https://github.com/guyka2212/fpv-sim/releases">GitHub releases</a>.</p>
+  </section>
+
+  <section id="controls">
+    <h2>Keys</h2>
+    <table>
+      <tr><th>Key</th><th>Gamepad</th><th></th></tr>
+      <tr><td><kbd>W</kbd>/<kbd>S</kbd> <kbd>A</kbd>/<kbd>D</kbd> arrows</td><td>sticks</td><td>Throttle, yaw, pitch, roll</td></tr>
+      <tr><td><kbd>Space</kbd></td><td>A</td><td>Arm / disarm</td></tr>
+      <tr><td><kbd>R</kbd> · <kbd>C</kbd> · <kbd>N</kbd></td><td>B · X · Y</td><td>Reset · camera · flight mode</td></tr>
+      <tr><td><kbd>M</kbd></td><td>Back / View</td><td>Map and teleport</td></tr>
+      <tr><td><kbd>V</kbd> · <kbd>T</kbd></td><td>pause menu</td><td>Record · chat (multiplayer)</td></tr>
+      <tr><td><kbd>Esc</kbd></td><td>Start</td><td>Pause menu</td></tr>
+    </table>
+  </section>
+
+  <section id="faq">
+    <h2>FAQ</h2>
+    <details><summary>Windows says "Windows protected your PC"</summary><p>That's SmartScreen warning about an installer that isn't code-signed. Click <b>More info</b>, then <b>Run anyway</b>.</p></details>
+    <details><summary>Does it need admin rights?</summary><p>No. It installs for your user only, in <code>%LOCALAPPDATA%\Programs\FPV Sim</code>, with a Start menu shortcut and an uninstaller in Settings → Apps.</p></details>
+    <details><summary>Which controllers work?</summary><p>Xbox, PlayStation and most USB / Bluetooth gamepads, RC radios that show up as a USB joystick (EdgeTX / OpenTX in joystick mode), and DJI remotes (RC-N1 / RC-N3 / FPV remote). The Controls tab has a calibration wizard.</p></details>
+    <details><summary>How do I play with friends?</summary><p>One of you runs a server (see the <a href="https://guyka2212.github.io/flysim-servers/">server website</a>), shares its address, and everyone adds it in the Multiplayer tab.</p></details>
+    <details><summary>Where are my settings and recordings?</summary><p>In the app's own storage on your computer. Uninstalling the game doesn't delete them.</p></details>
+  </section>
+</main>
+<footer>FPV Sim · <a href="https://github.com/guyka2212/fpv-sim">GitHub</a> · <a href="https://guyka2212.github.io/flysim-servers/">Servers</a></footer>
+<script>
+  const MAPS = [
+    ['bando', 'The Bando', 'Abandoned concrete shell, skate park and containers: gaps and power loops.'],
+    ['racetrack', 'Race Field', 'MultiGP-style track with 12 gates, a dive gate and timed laps.'],
+    ['house', 'The House', 'A furnished house at real scale and a whoop race line.'],
+    ['town', 'Old Town', 'Streets, a church bell tower and a park pond: smooth cinematic lines.'],
+    ['mountains', 'Alpine Valley', 'A 1.8 km valley with a lake, pines and rock arches for long range.'],
+    ['mall', 'Skylight Mall', 'Three storeys open to the sky and a giant lattice dome.'],
+    ['f1', 'Grand Prix Circuit', '2.1 km road course with F1 cars racing laps.'],
+    ['oval', 'Speedway', 'A banked oval with a pack of stock cars at full throttle.'],
+    ['lake', 'Crystal Lake', 'A lighthouse island, piers, a boathouse and sailboats.'],
+    ['hollywood', 'Hollywood Hills', 'Palm boulevard, a movie palace, sound stages and the hillside sign.'],
+    ['paris', 'Paris', 'A 200 m lattice tower, the Seine bridges and the triumphal arch.'],
+    ['stadium', 'Stadium', 'Two tiers, open corners and a ring roof to thread.'],
+  ];
+  document.getElementById('maplist').innerHTML = MAPS.map(([id, name, d]) => `<div class="map"><img src="img/${id}.jpg" alt="${name}" loading="lazy"><div><b>${name}</b><p>${d}</p></div></div>`).join('');
+  // Hero: slowly cross-fade through the maps.
+  const hero = document.getElementById('hero');
+  const shots = ['paris', 'hollywood', 'lake', 'mall', 'stadium', 'mountains'];
+  const layers = shots.map((id, i) => {
+    const d = document.createElement('div');
+    d.className = 'bg' + (i === 0 ? ' on' : '');
+    d.style.backgroundImage = `url(img/${id}.jpg)`;
+    hero.prepend(d);
+    return d;
+  });
+  let cur = 0;
+  setInterval(() => {
+    layers[cur].classList.remove('on');
+    cur = (cur + 1) % layers.length;
+    layers[cur].classList.add('on');
+  }, 6000);
+  // Show the latest version from GitHub (best effort).
+  fetch('https://api.github.com/repos/guyka2212/fpv-sim/releases/latest')
+    .then((r) => (r.ok ? r.json() : null))
+    .then((r) => {
+      if (r?.tag_name) document.getElementById('version').textContent = `Free · version ${r.tag_name.replace(/^v/, '')} · Windows 10 / 11 (64-bit) · Android 8+`;
+    })
+    .catch(() => {});
+</script>
+</body>
+</html>
