@@ -1,0 +1,440 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FPV Sim Plugins</title>
+<meta name="description" content="How to make FPV Sim plugins in JavaScript: on-screen text and panels, menu tabs, settings, keys, 3D objects, physics and multiplayer chat. Full API reference with examples." />
+<link rel="icon" href="img/favicon.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #0b0f14; --panel: #121922; --panel2: #18212c; --line: rgba(255, 255, 255, 0.1);
+    --text: #e8eef5; --muted: #8a99aa; --accent: #ff6a1a; --good: #3ddc84; --warn: #ffc46a;
+    --font: 'Rajdhani', system-ui, sans-serif; --mono: 'JetBrains Mono', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 18px/1.6 var(--font); }
+  a { color: var(--accent); }
+  code, kbd { font-family: var(--mono); font-size: 0.8em; background: var(--panel2); padding: 2px 6px; border-radius: 6px; }
+  pre { background: #0f151d; border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; overflow-x: auto; font: 14px/1.55 var(--mono); }
+  pre code { background: none; padding: 0; font-size: inherit; }
+  .k { color: #ff9b6a; } .s { color: #9fe39a; } .c { color: #6f8196; } .f { color: #7cc7ff; }
+  header.top { position: sticky; top: 0; z-index: 10; display: flex; gap: 22px; align-items: center; padding: 12px 24px; background: rgba(11, 15, 20, 0.9); backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+  .logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 24px; letter-spacing: 0.04em; text-decoration: none; color: var(--text); }
+  .logo img { width: 30px; height: 30px; border-radius: 7px; }
+  .logo span { color: var(--accent); }
+  header.top nav { display: flex; gap: 18px; flex: 1; flex-wrap: wrap; }
+  header.top nav a { color: var(--muted); text-decoration: none; font-weight: 600; }
+  header.top nav a:hover { color: var(--text); }
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; border-radius: 12px; font-weight: 700; font-size: 17px; text-decoration: none; border: 1px solid var(--line); background: var(--panel); color: var(--text); }
+  .btn:hover { border-color: var(--accent); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: #140a03; }
+  .wrap { display: grid; grid-template-columns: 230px minmax(0, 1fr); gap: 36px; max-width: 1180px; margin: 0 auto; padding: 30px 24px 60px; }
+  aside { position: sticky; top: 76px; align-self: start; max-height: calc(100vh - 96px); overflow: auto; font-size: 16px; }
+  aside a { display: block; color: var(--muted); text-decoration: none; padding: 3px 0; }
+  aside a:hover { color: var(--text); }
+  aside .grp { color: var(--text); font-weight: 700; margin-top: 12px; }
+  main h1 { font-size: clamp(38px, 6vw, 60px); line-height: 1; margin: 0 0 10px; }
+  main h1 em { color: var(--accent); font-style: normal; }
+  main h2 { font-size: 32px; margin: 46px 0 8px; padding-top: 8px; border-top: 1px solid var(--line); }
+  main h3 { font-size: 22px; margin: 26px 0 6px; }
+  .lead { color: #c9d3de; font-size: 21px; max-width: 760px; }
+  .note { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--accent); border-radius: 10px; padding: 12px 16px; margin: 16px 0; }
+  .note.warn { border-left-color: var(--warn); }
+  .note.good { border-left-color: var(--good); }
+  table { width: 100%; border-collapse: collapse; background: var(--panel); border-radius: 12px; overflow: hidden; border: 1px solid var(--line); margin: 10px 0 16px; font-size: 16px; }
+  th, td { text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  th { color: var(--muted); font-weight: 600; background: var(--panel2); }
+  td:first-child { white-space: nowrap; }
+  ol li, ul li { margin: 4px 0; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 14px 16px; }
+  .card b { font-size: 20px; }
+  .card p { margin: 4px 0 10px; color: var(--muted); font-size: 16px; }
+  footer { color: var(--muted); text-align: center; padding: 30px; border-top: 1px solid var(--line); }
+  @media (max-width: 860px) {
+    .wrap { grid-template-columns: minmax(0, 1fr); padding: 20px 16px 50px; }
+    table { display: block; overflow-x: auto; }
+    aside { display: none; }
+    header.top { flex-wrap: wrap; gap: 8px 16px; padding: 10px 16px; }
+    header.top .btn { display: none; }
+    td:first-child { white-space: normal; }
+  }
+</style>
+</head>
+<body>
+<header class="top">
+  <a class="logo" href="index.html"><img src="img/icon.png" alt="" />FPV<span>SIM</span></a>
+  <nav>
+    <a href="index.html#features">Features</a>
+    <a href="index.html#download">Download</a>
+    <a href="plugins.html">Plugins</a>
+    <a href="https://guyka2212.github.io/flysim-servers/">Servers</a>
+  </nav>
+  <a class="btn primary" href="index.html#download">Download</a>
+</header>
+
+<div class="wrap">
+<aside>
+  <div class="grp">Start</div>
+  <a href="#start">Your first plugin</a>
+  <a href="#install">Adding plugins</a>
+  <a href="#format">File format</a>
+  <a href="#rules">Good to know</a>
+  <a href="#servers">Servers and plugins</a>
+  <div class="grp">API</div>
+  <a href="#events">Events</a>
+  <a href="#drone">api.drone</a>
+  <a href="#world">api.world &amp; 3D</a>
+  <a href="#ui">api.ui (screen &amp; menus)</a>
+  <a href="#keys">Shortcuts (api.keys)</a>
+  <a href="#physics">api.physics &amp; time</a>
+  <a href="#input">api.input (sticks)</a>
+  <a href="#camera">api.camera</a>
+  <a href="#sound">api.sound</a>
+  <a href="#storage">api.storage</a>
+  <a href="#game">api.game</a>
+  <a href="#mp">api.multiplayer</a>
+  <a href="#misc">Timers, logs, cleanup</a>
+  <div class="grp">More</div>
+  <a href="#examples">Example plugins</a>
+  <a href="#recipes">Recipes</a>
+  <a href="#ideas">Ideas to build</a>
+  <a href="#types">Autocomplete (types)</a>
+  <a href="#debug">Debugging</a>
+</aside>
+
+<main>
+  <h1>Make <em>plugins</em></h1>
+  <p class="lead">Plugins change FPV Sim however you like: put text and panels on the screen, add menu tabs and settings, bind keys, build things on the map, bend the physics or react to tricks, crashes and chat. They're plain <b>JavaScript</b> files: no compiler, no tools, just a text editor.</p>
+  <div class="note good">Needs FPV Sim <b>1.3.0</b> or newer (Windows, Android or the web version). Plugin API version: <code>2</code>.</div>
+
+  <h2 id="start">Your first plugin</h2>
+  <p>Make a file called <code>hello.js</code> with this in it:</p>
+<pre><code><span class="k">export const</span> info = {
+  id: <span class="s">'hello'</span>,
+  name: <span class="s">'Hello'</span>,
+  version: <span class="s">'1.0.0'</span>,
+  description: <span class="s">'Says hello and shows your speed.'</span>,
+  api: <span class="s">1</span>,
+};
+
+<span class="k">export default function</span> (api) {
+  <span class="c">// Text on the screen while you fly (x / y are 0..1 of the screen).</span>
+  <span class="k">const</span> label = api.ui.<span class="f">text</span>(<span class="s">'Hello pilot!'</span>, { x: <span class="s">0.05</span>, y: <span class="s">0.5</span> });
+
+  <span class="c">// Runs every frame.</span>
+  api.<span class="f">on</span>(<span class="s">'frame'</span>, () =&gt; {
+    label.<span class="f">set</span>(<span class="s">`Speed: ${</span>(api.drone.speed * <span class="s">3.6</span>).<span class="f">toFixed</span>(<span class="s">0</span>)<span class="s">} km/h`</span>);
+  });
+
+  api.<span class="f">on</span>(<span class="s">'crash'</span>, ({ speed }) =&gt; api.ui.<span class="f">popup</span>(<span class="s">`Ouch! ${</span>speed.<span class="f">toFixed</span>(<span class="s">1</span>)<span class="s">} m/s`</span>, <span class="s">'bail'</span>));
+}</code></pre>
+  <p>In the game, open the <b>Plugins</b> tab → <b>+ Add plugin (.js)</b> → pick <code>hello.js</code>. Press <b>FLY</b>: your text is on the screen.</p>
+
+  <h2 id="install">Adding, updating and removing plugins</h2>
+  <ul>
+    <li><b>Add:</b> Plugins tab → <b>+ Add plugin (.js)</b>. You can pick several files at once. A plugin starts as soon as it's added.</li>
+    <li><b>Update:</b> add the file again. A plugin with the same <code>id</code> replaces the old one.</li>
+    <li><b>Turn off / on:</b> the button on its card. Everything it added through the API (text, panels, tabs, settings, keys, 3D objects, timers) is removed when it's off.</li>
+    <li><b>Reload all</b> restarts every plugin that's on.</li>
+    <li><b>Save .js</b> downloads a plugin's file (handy for the examples).</li>
+    <li>Plugins are saved in the game on that device and start again every time the game opens.</li>
+  </ul>
+
+  <h2 id="format">File format</h2>
+  <p>A plugin is a JavaScript <b>module</b> with two exports:</p>
+  <table>
+    <tr><th>Export</th><th>What it is</th></tr>
+    <tr><td><code>info</code></td><td>An object: <code>id</code> (letters, numbers, <code>. _ -</code>; it's the plugin's identity), <code>name</code>, <code>version</code>, <code>description</code>, <code>author</code>, and <code>api</code> (the lowest plugin API version it needs), and <code>keys</code> (its <a href="#keys">shortcuts</a>). Write it as a plain object literal so the game can read it.</td></tr>
+    <tr><td><code>default</code></td><td><code>function (api) { … }</code>: runs when the plugin starts. It can be <code>async</code>. It may return a function, which runs when the plugin stops.</td></tr>
+  </table>
+  <p>You can <code>import</code> from full URLs (for example a library on a CDN), but most plugins don't need to: <a href="#world">three.js</a> comes with the API as <code>api.THREE</code>.</p>
+
+  <h2 id="rules">Good to know</h2>
+  <div class="note warn"><b>Plugins can do anything the game can</b>, including using your signed-in account on that device. Only add plugins you wrote or got from someone you trust, and read them first: they're just text.</div>
+  <ul>
+    <li>Distances are in <b>metres</b>, speeds in <b>m/s</b>, angles in <b>radians</b>, time in <b>seconds</b>.</li>
+    <li>The world uses three.js axes: <b>+Y is up</b>, the ground is the X/Z plane, and heading 0 faces <b>−Z</b> ("north", up on the map).</li>
+    <li>A plugin that throws errors over and over (say every frame) is switched off automatically, and the error shows on its card.</li>
+    <li>Plugins run on your device only. In multiplayer, other pilots don't get your plugins, and the server still decides things like who's on it and the chat.</li>
+    <li>Flight Path XP is checked by the server (daily and per-minute limits), so a plugin can't level you up faster than flying can.</li>
+  </ul>
+
+  <h2 id="servers">Servers and plugins</h2>
+  <p>Server owners decide whether players may use plugins on their server, in <code>server.settings</code> (or live with the <code>set</code> command):</p>
+<pre><code><span class="c"># true: players may use plugins here. false: their plugins are paused while they're on this server.</span>
+allow-plugins=true
+<span class="c"># Empty = any plugin. Or only these plugin ids, separated by commas:</span>
+allowed-plugins=speed-hud,lap-timer</code></pre>
+  <p>When you join, plugins the server doesn't allow are paused (their card says <b>Paused by server</b>) and start again when you leave. Needs server 1.2.0 or newer; older servers allow everything.</p>
+
+  <h2 id="events">Events</h2>
+  <p><code>api.on(name, fn)</code> runs <code>fn(data)</code> when something happens. It returns a function that stops listening.</p>
+  <table>
+    <tr><th>Event</th><th>When</th><th>data</th></tr>
+    <tr><td><code>frame</code></td><td>Every rendered frame (menu, flight, replays…)</td><td><code>{ dt, state }</code>: seconds since the last frame, and the <a href="#game">game state</a></td></tr>
+    <tr><td><code>flightStart</code></td><td>A flight begins (map loaded, drone on the pad)</td><td><code>{ map, drone, multiplayer }</code>: ids, and whether it's a multiplayer round</td></tr>
+    <tr><td><code>flightEnd</code></td><td>Back to the main menu</td><td>none</td></tr>
+    <tr><td><code>reset</code></td><td>The drone is put back on the start (R / B, auto reset, new flight)</td><td>none</td></tr>
+    <tr><td><code>crash</code></td><td>A crash or a drowning</td><td><code>{ speed, drowned }</code></td></tr>
+    <tr><td><code>trick</code></td><td>A trick is recognised</td><td><code>{ name, points, combo }</code></td></tr>
+    <tr><td><code>chat</code></td><td>A multiplayer chat line arrives (also join / leave notes)</td><td><code>{ from, text, system }</code></td></tr>
+    <tr><td><code>pause</code> / <code>resume</code></td><td>The pause menu opens / closes</td><td>none</td></tr>
+    <tr><td><code>tab</code></td><td>A main-menu tab is clicked</td><td><code>{ tab }</code></td></tr>
+    <tr><td><code>arm</code> / <code>disarm</code></td><td>The motors are armed / disarmed in flight</td><td>none</td></tr>
+    <tr><td><code>join</code> / <code>leave</code></td><td>You join a server (its lobby) / leave it or it closes</td><td><code>{ address, server }</code> / <code>{ reason }</code></td></tr>
+    <tr><td><code>playerJoin</code> / <code>playerLeave</code></td><td>Another pilot joins / leaves the server</td><td><code>{ id, name }</code></td></tr>
+  </table>
+<pre><code><span class="k">const</span> stop = api.<span class="f">on</span>(<span class="s">'trick'</span>, (t) =&gt; api.<span class="f">log</span>(t.name, t.points));
+<span class="c">// later: stop();</span></code></pre>
+
+  <h2 id="drone">api.drone</h2>
+  <p>The drone you're flying. <code>position</code>, <code>velocity</code>, <code>quaternion</code> and <code>rates</code> are the <b>live</b> three.js objects: change them and the drone changes.</p>
+  <table>
+    <tr><th>Name</th><th>What</th></tr>
+    <tr><td><code>position</code></td><td><code>Vector3</code>, metres</td></tr>
+    <tr><td><code>velocity</code></td><td><code>Vector3</code>, m/s</td></tr>
+    <tr><td><code>quaternion</code></td><td><code>Quaternion</code>, the attitude</td></tr>
+    <tr><td><code>rates</code></td><td><code>Vector3</code>, body rates in rad/s (x pitch, y yaw, z roll)</td></tr>
+    <tr><td><code>speed</code></td><td>m/s (read only)</td></tr>
+    <tr><td><code>altitude</code></td><td>metres above the ground straight below (read only)</td></tr>
+    <tr><td><code>heading</code></td><td>radians, 0 = facing −Z (read only)</td></tr>
+    <tr><td><code>armed</code>, <code>mode</code>, <code>crashed</code></td><td>armed or not; flight mode (<code>'acro'</code>, <code>'angle'</code> or <code>'horizon'</code>: set it to switch); crashed and waiting for a reset</td></tr>
+    <tr><td><code>battery</code></td><td><code>{ voltage, charge, usedMah }</code>: volts, 0..1, mAh used</td></tr>
+    <tr><td><code>spec</code></td><td>The drone's spec: <code>name</code>, <code>mass</code>, <code>motor</code>, <code>prop</code>, <code>battery</code>, <code>rates</code>, <code>crashSpeed</code>… Mostly for reading. <code>crashSpeed</code> works right away when changed; the physics (mass, thrust) is worked out when the flight starts. Changes last until the game restarts.</td></tr>
+    <tr><td><code>arm()</code>, <code>disarm()</code></td><td>Arm or disarm the motors</td></tr>
+    <tr><td><code>reset()</code></td><td>Back to the start of the map</td></tr>
+    <tr><td><code>teleport(x, y, z, heading?)</code></td><td>Move the drone there, stopped (keeps it armed)</td></tr>
+  </table>
+<pre><code><span class="c">// A "boost" shortcut (declared in info.keys, see below): shoot forward.</span>
+api.keys.<span class="f">bind</span>(<span class="s">'boost'</span>, () =&gt; {
+  <span class="k">const</span> fwd = <span class="k">new</span> api.THREE.<span class="f">Vector3</span>(<span class="s">0</span>, <span class="s">0</span>, -<span class="s">1</span>).<span class="f">applyQuaternion</span>(api.drone.quaternion);
+  api.drone.velocity.<span class="f">addScaledVector</span>(fwd, <span class="s">15</span>);
+});
+<span class="c">// Indestructible drone.</span>
+api.drone.spec.crashSpeed = <span class="s">999</span>;</code></pre>
+  <div class="note">Pick keys the game doesn't use. The game uses W A S D, X, Shift, the arrows, Space, Enter, Esc, P, R, C, N, M, V and T.</div>
+
+  <h2 id="world">api.world and 3D</h2>
+  <table>
+    <tr><th>Name</th><th>What</th></tr>
+    <tr><td><code>api.THREE</code></td><td>The whole <a href="https://threejs.org/docs/">three.js</a> library the game uses (meshes, materials, lights, vectors…)</td></tr>
+    <tr><td><code>world.scene</code></td><td>The three.js <code>Scene</code> being drawn</td></tr>
+    <tr><td><code>world.map</code></td><td><code>{ id, name }</code> of the loaded map, or <code>null</code> in the menu</td></tr>
+    <tr><td><code>world.spawn</code></td><td><code>Vector3</code>: the start point on the ground</td></tr>
+    <tr><td><code>world.add(object)</code></td><td>Adds a three.js object to the scene. It's removed when the plugin stops.</td></tr>
+    <tr><td><code>world.remove(object)</code></td><td>Takes it away again</td></tr>
+    <tr><td><code>world.groundDistance(x, y, z, max?)</code></td><td>Metres straight down from that point to the first surface (<code>Infinity</code> if none)</td></tr>
+  </table>
+<pre><code><span class="k">const</span> { THREE } = api;
+api.<span class="f">on</span>(<span class="s">'flightStart'</span>, () =&gt; {
+  <span class="k">const</span> box = <span class="k">new</span> THREE.<span class="f">Mesh</span>(<span class="k">new</span> THREE.<span class="f">BoxGeometry</span>(<span class="s">2</span>, <span class="s">2</span>, <span class="s">2</span>), <span class="k">new</span> THREE.<span class="f">MeshStandardMaterial</span>({ color: <span class="s">0x39ff6a</span> }));
+  box.position.<span class="f">copy</span>(api.world.spawn).<span class="f">add</span>(<span class="k">new</span> THREE.<span class="f">Vector3</span>(<span class="s">0</span>, <span class="s">3</span>, -<span class="s">10</span>));
+  api.world.<span class="f">add</span>(box);
+});</code></pre>
+  <p>Objects you add are drawn but the drone doesn't collide with them; use the drone's position to make your own triggers (see the Ring Race example).</p>
+
+  <h2 id="ui">api.ui: screen, menus and settings</h2>
+  <h3>Text on the screen</h3>
+  <p><code>api.ui.text(content, options)</code> returns <code>{ el, set(text), show(on), remove() }</code>.</p>
+  <table>
+    <tr><th>Option</th><th>What</th></tr>
+    <tr><td><code>x</code>, <code>y</code></td><td>Where its top-left corner goes, as 0..1 of the screen</td></tr>
+    <tr><td><code>when</code></td><td><code>'flying'</code> (default: in flight and pause), <code>'menu'</code> or <code>'always'</code></td></tr>
+    <tr><td><code>html</code></td><td><code>true</code> to treat <code>content</code> / <code>set()</code> as HTML</td></tr>
+    <tr><td><code>style</code></td><td>Any CSS, e.g. <code>{ fontSize: '30px', color: '#ff6a1a', transform: 'translateX(-50%)' }</code></td></tr>
+  </table>
+  <h3>Panels</h3>
+  <p><code>api.ui.panel(title, { x, y, width, when })</code> gives a boxed window with a title and a hide button. Put anything in <code>.body</code>. It returns <code>{ el, body, show(on), remove() }</code>. Panels take clicks; text doesn't. <code>when</code> defaults to <code>'always'</code>.</p>
+<pre><code><span class="k">const</span> p = api.ui.<span class="f">panel</span>(<span class="s">'Tools'</span>, { x: <span class="s">0.02</span>, y: <span class="s">0.3</span>, width: <span class="s">200</span>, when: <span class="s">'flying'</span> });
+p.body.<span class="f">append</span>(
+  api.ui.<span class="f">el</span>(<span class="s">'button'</span>, { textContent: <span class="s">'Back to start'</span>, onclick: () =&gt; api.drone.<span class="f">reset</span>() }),
+);</code></pre>
+  <h3>Building elements</h3>
+  <p><code>api.ui.el(tag, props, children)</code> makes an HTML element. <code>props</code> can set any property (<code>textContent</code>, <code>value</code>, <code>class</code>…), <code>style</code> as an object, and events as <code>onclick</code>, <code>onchange</code>, <code>oninput</code>… You can also use normal DOM code (<code>document.createElement</code>).</p>
+  <h3>A menu tab</h3>
+  <p><code>api.ui.menuTab(title, render)</code> adds a tab to the main menu. <code>render(container)</code> draws it every time it's opened. Returns <code>{ open(), redraw() }</code>. Class names that match the game's look: <code>mp-box</code> (a panel), <code>sub</code> (grey text), <code>cards wide</code> + <code>card</code> (a grid of cards), <code>fly</code> (an orange button).</p>
+<pre><code>api.ui.<span class="f">menuTab</span>(<span class="s">'My Tab'</span>, (box) =&gt; {
+  box.<span class="f">append</span>(api.ui.<span class="f">el</span>(<span class="s">'div'</span>, { class: <span class="s">'mp-box'</span> }, [
+    api.ui.<span class="f">el</span>(<span class="s">'h2'</span>, { textContent: <span class="s">'Hello from a plugin'</span> }),
+    api.ui.<span class="f">el</span>(<span class="s">'button'</span>, { class: <span class="s">'fly'</span>, textContent: <span class="s">'Fly Old Town'</span>, onclick: () =&gt; { api.game.settings.mapId = <span class="s">'town'</span>; } }),
+  ]));
+});</code></pre>
+  <h3>Settings</h3>
+  <p><code>api.ui.settingsSection(title, render)</code> adds a section at the end of <b>Settings</b>. Use the <code>field</code> class for a label + control row like the game's own settings, and <a href="#storage">api.storage</a> to remember choices.</p>
+  <h3>Messages</h3>
+  <table>
+    <tr><td><code>ui.osd(text, kind?, seconds?)</code></td><td>A message in the middle of the flight screen. <code>kind</code>: <code>''</code>, <code>'warn'</code> or <code>'bad'</code>.</td></tr>
+    <tr><td><code>ui.popup(html, kind?)</code></td><td>A short popup like the trick points. <code>kind</code>: <code>''</code>, <code>'bank'</code> (green) or <code>'bail'</code> (red).</td></tr>
+    <tr><td><code>ui.notice(text)</code></td><td>A message box with an OK button.</td></tr>
+    <tr><td><code>ui.css(text)</code></td><td>Adds your own CSS to the page (removed with the plugin). Restyle anything in the game.</td></tr>
+  </table>
+
+  <h2 id="keys">Shortcuts (api.keys)</h2>
+  <p>Declare your plugin's shortcuts in <code>info.keys</code>. Each one gets a row in <b>Settings → Plugin shortcuts</b>, where the player can set it to <b>any key or controller button</b> (or both). Then bind it by its name:</p>
+<pre><code><span class="k">export const</span> info = {
+  id: <span class="s">'turbo'</span>, name: <span class="s">'Turbo'</span>, api: <span class="s">2</span>,
+  keys: {
+    boost: { name: <span class="s">'Boost'</span>, key: <span class="s">'KeyB'</span>, pad: <span class="s">3</span> },   <span class="c">// default: B, or Y on a controller</span>
+    panel: { name: <span class="s">'Open panel'</span>, key: <span class="s">'F4'</span> },
+  },
+};
+
+<span class="k">export default function</span> (api) {
+  api.keys.<span class="f">bind</span>(<span class="s">'boost'</span>, () =&gt; { <span class="c">/* … */</span> });
+  api.ui.<span class="f">osd</span>(<span class="s">`Boost: ${</span>api.keys.<span class="f">label</span>(<span class="s">'boost'</span>)<span class="s">}`</span>);  <span class="c">// what it's set to now, e.g. "B / 🎮 Y"</span>
+}</code></pre>
+  <table>
+    <tr><th>Name</th><th>What</th></tr>
+    <tr><td><code>keys.bind(name, fn, when?)</code></td><td>Runs <code>fn</code> when the shortcut is pressed. <code>name</code> is a shortcut from <code>info.keys</code>, or a raw key code like <code>'KeyG'</code> (which the player can't change). <code>when</code>: <code>'flying'</code> (default), <code>'menu'</code>, <code>'paused'</code> or <code>'always'</code>. Returns a function that unbinds it.</td></tr>
+    <tr><td><code>keys.label(name)</code></td><td>What a declared shortcut is set to now, to show the player</td></tr>
+    <tr><td><code>key</code> (in info.keys)</td><td>Default key, as a <a href="https://developer.mozilla.org/en-US/docs/Web/API/UI_Events/Keyboard_event_code_values">key code</a>: <code>'KeyG'</code>, <code>'Digit1'</code>, <code>'F2'</code>, <code>'Numpad5'</code>, <code>'PageUp'</code>… It's the physical key, so it works with any keyboard language.</td></tr>
+    <tr><td><code>pad</code> (in info.keys)</td><td>Default controller button: 0 A, 1 B, 2 X, 3 Y, 4 LB, 5 RB, 6 LT, 7 RT, 8 Back, 9 Start, 10 / 11 stick clicks, 12–15 D-pad up, down, left, right</td></tr>
+  </table>
+  <p>Shortcuts never fire while the player types in a text box (like the chat), and a key a plugin uses (F5, PageUp…) won't also reload or scroll the page. In Settings, a key the game itself uses is outlined in yellow. The game uses W A S D, X, Shift, the arrows, Space, Enter, Esc, P, R, C, N, M, V and T.</p>
+
+  <h2 id="physics">api.physics and api.time</h2>
+  <p>Multipliers on the real physics: <code>1</code> is normal. If two plugins change the same value, they multiply together. Everything goes back to normal when the plugin stops.</p>
+  <table>
+    <tr><td><code>physics.thrust</code></td><td>Lift from the props (the steering stays the same)</td></tr>
+    <tr><td><code>physics.drag</code></td><td>Air drag on the body and props</td></tr>
+    <tr><td><code>physics.gravity</code></td><td>Gravity (<code>1/6</code> = the Moon)</td></tr>
+    <tr><td><code>physics.propSpeed</code></td><td>Props stop pushing once the air through them is as fast as their pitch speed. Above 1 raises the drone's top speed.</td></tr>
+    <tr><td><code>physics.battery</code></td><td>Battery drain (<code>0</code> = never runs down)</td></tr>
+    <tr><td><code>physics.reset()</code></td><td>Your plugin's values back to 1</td></tr>
+    <tr><td><code>time.scale</code></td><td>Speed of the whole sim: <code>0.25</code> slow motion, <code>2</code> double speed (0.05 to 4)</td></tr>
+  </table>
+<pre><code><span class="c">// Break the top speed: about 112 → 190 km/h on a Freestyle 5".</span>
+api.physics.propSpeed = <span class="s">2</span>;
+api.physics.thrust = <span class="s">1.4</span>;
+api.physics.drag = <span class="s">0.55</span>;</code></pre>
+
+  <h2 id="input">api.input: the sticks</h2>
+  <p><code>input.modify(fn)</code> runs <code>fn(sticks)</code> every flight frame, <b>before the flight controller reads the sticks</b>. Change the values to fly the drone yourself: autopilots, assists, input curves, return to home…</p>
+  <table>
+    <tr><td><code>sticks.throttle</code></td><td>0..1</td></tr>
+    <tr><td><code>sticks.yaw</code>, <code>.pitch</code>, <code>.roll</code></td><td>−1..1 (right, forward and right are +)</td></tr>
+    <tr><td><code>input.sticks</code></td><td>A copy of this frame's sticks, for reading</td></tr>
+    <tr><td><code>input.isDown(code)</code></td><td>True while that key is held</td></tr>
+    <tr><td><code>input.buttons</code></td><td>Controller buttons held right now</td></tr>
+  </table>
+<pre><code><span class="c">// Altitude hold: keep the height you had when you pressed the shortcut.</span>
+<span class="k">let</span> target = <span class="k">null</span>, base = <span class="s">0.5</span>;
+api.keys.<span class="f">bind</span>(<span class="s">'hold'</span>, () =&gt; {
+  target = target === <span class="k">null</span> ? api.drone.position.y : <span class="k">null</span>;
+  base = api.input.sticks.throttle;
+});
+api.input.<span class="f">modify</span>((s) =&gt; {
+  <span class="k">if</span> (target === <span class="k">null</span>) <span class="k">return</span>;
+  <span class="k">const</span> err = target - api.drone.position.y;
+  base += err * <span class="s">0.0004</span>;
+  s.throttle = base + err * <span class="s">0.06</span> - api.drone.velocity.y * <span class="s">0.05</span>;
+});</code></pre>
+
+  <h2 id="camera">api.camera</h2>
+  <table>
+    <tr><td><code>camera.object</code></td><td>The three.js camera being drawn</td></tr>
+    <tr><td><code>camera.mode</code></td><td><code>'fpv'</code>, <code>'chase'</code> or <code>'los'</code> (line of sight)</td></tr>
+    <tr><td><code>camera.fov</code></td><td>FPV field of view in degrees; set it to zoom</td></tr>
+    <tr><td><code>camera.uptilt</code></td><td>FPV camera uptilt in degrees; set it to tilt</td></tr>
+    <tr><td><code>camera.cycle()</code></td><td>Next camera</td></tr>
+  </table>
+
+  <h2 id="sound">api.sound</h2>
+  <table>
+    <tr><td><code>sound.beep(freq?, ms?, volume?, wave?)</code></td><td>A beep: Hz (880), length (120 ms), volume 0..1 (0.2), <code>'sine'</code>, <code>'square'</code>, <code>'sawtooth'</code> or <code>'triangle'</code></td></tr>
+    <tr><td><code>sound.say(text)</code></td><td>Reads the text aloud with the computer's voice</td></tr>
+  </table>
+
+  <h2 id="storage">api.storage</h2>
+  <p>Saved on the device, separately for each plugin, and kept across restarts. Values can be anything JSON can hold.</p>
+<pre><code><span class="k">const</span> best = api.storage.<span class="f">get</span>(<span class="s">'best'</span>, <span class="s">0</span>);   <span class="c">// second value = default</span>
+api.storage.<span class="f">set</span>(<span class="s">'best'</span>, <span class="s">42.5</span>);
+api.storage.<span class="f">remove</span>(<span class="s">'best'</span>);</code></pre>
+
+  <h2 id="game">api.game</h2>
+  <table>
+    <tr><td><code>game.state</code></td><td><code>'menu'</code>, <code>'loading'</code>, <code>'flying'</code>, <code>'paused'</code>, <code>'map'</code> (the M map is open), <code>'naming'</code> (naming a recording), <code>'replay'</code> or <code>'lobby'</code></td></tr>
+    <tr><td><code>game.multiplayer</code></td><td><code>true</code> during a multiplayer round</td></tr>
+    <tr><td><code>game.settings</code></td><td>The player's settings, live (<code>droneId</code>, <code>mapId</code>, <code>volume</code>, <code>fpsCap</code>, <code>miniMap</code>…). After changing some, call <code>game.applySettings()</code> to save them and redraw Settings.</td></tr>
+    <tr><td><code>game.raw</code></td><td>The whole game object: the physics, flight controller, camera rig, renderer, sound and more. Everything is reachable here, but it's the game's inside, so names can change between versions; prefer the API where it has what you need.</td></tr>
+  </table>
+
+  <h2 id="mp">api.multiplayer</h2>
+  <table>
+    <tr><td><code>multiplayer.connected</code></td><td>On a server right now</td></tr>
+    <tr><td><code>multiplayer.myId</code></td><td>Your player id (0 when not on a server)</td></tr>
+    <tr><td><code>multiplayer.players</code></td><td>Everyone on the server: <code>{ id, name, drone, level, ping }</code></td></tr>
+    <tr><td><code>multiplayer.drones</code></td><td>Where the other drones are: <code>{ id, position, drone }</code></td></tr>
+    <tr><td><code>multiplayer.say(text)</code></td><td>Sends a chat line as you (if chat is on). Please don't spam servers.</td></tr>
+  </table>
+  <p>Listen with <code>api.on('chat', …)</code>.</p>
+
+  <h2 id="misc">Timers, logs and cleanup</h2>
+  <table>
+    <tr><td><code>api.every(ms, fn)</code></td><td>Runs <code>fn</code> every <code>ms</code> milliseconds until the plugin stops. Returns a stop function.</td></tr>
+    <tr><td><code>api.after(ms, fn)</code></td><td>Runs <code>fn</code> once after <code>ms</code> milliseconds (cancelled if the plugin stops)</td></tr>
+    <tr><td><code>api.log(...)</code></td><td><code>console.log</code> with your plugin's id in front</td></tr>
+    <tr><td><code>api.onUnload(fn)</code></td><td>Runs when the plugin is turned off or removed (for things you made yourself, outside the API)</td></tr>
+    <tr><td><code>api.info</code>, <code>api.version</code></td><td>Your plugin's id, name and version; the game's plugin API version</td></tr>
+  </table>
+
+  <h2 id="examples">Example plugins</h2>
+  <p>These come with the game (Plugins tab → Examples) and are here to download and change.</p>
+  <div class="cards">
+    <div class="card"><b>Speed HUD</b><p>Big speed and height numbers; a Settings section for km/h or mph.</p><a class="btn" href="plugins/speed-hud.js" download>speed-hud.js</a></div>
+    <div class="card"><b>Moon Gravity</b><p>Press G to switch to 1/6 gravity. Shows a declared shortcut and api.physics.</p><a class="btn" href="plugins/moon-gravity.js" download>moon-gravity.js</a></div>
+    <div class="card"><b>Ring Race</b><p>3D rings near the start, a timer, best times and its own menu tab.</p><a class="btn" href="plugins/rings.js" download>rings.js</a></div>
+    <div class="card"><b>Flight Stats</b><p>A panel with crashes, tricks and top speed. H shows and hides it.</p><a class="btn" href="plugins/flight-stats.js" download>flight-stats.js</a></div>
+  </div>
+
+  <h2 id="recipes">Recipes</h2>
+  <h3>Do something once per second</h3>
+<pre><code>api.<span class="f">every</span>(<span class="s">1000</span>, () =&gt; { <span class="k">if</span> (api.game.state === <span class="s">'flying'</span>) api.<span class="f">log</span>(api.drone.position); });</code></pre>
+  <h3>A chat command</h3>
+<pre><code>api.<span class="f">on</span>(<span class="s">'chat'</span>, ({ from, text }) =&gt; {
+  <span class="k">if</span> (text === <span class="s">'!where'</span>) api.ui.<span class="f">popup</span>(<span class="s">`${</span>from<span class="s">} wants to know where you are`</span>);
+});</code></pre>
+  <h3>Slow motion while you hold a key</h3>
+<pre><code><span class="k">let</span> slow = <span class="k">false</span>;
+api.keys.<span class="f">bind</span>(<span class="s">'KeyQ'</span>, () =&gt; (slow = !slow));
+api.<span class="f">on</span>(<span class="s">'frame'</span>, ({ dt, state }) =&gt; {
+  <span class="k">if</span> (!slow || state !== <span class="s">'flying'</span>) <span class="k">return</span>;
+  api.drone.velocity.<span class="f">multiplyScalar</span>(<span class="s">1</span> - <span class="s">2</span> * dt);  <span class="c">// heavy air</span>
+});</code></pre>
+  <h3>Restyle the game</h3>
+<pre><code>api.ui.<span class="f">css</span>(<span class="s">`#osd { color: #39ff6a; }  #fly { background: #2e7dff; }`</span>);</code></pre>
+
+  <h2 id="ideas">Ideas to build</h2>
+  <p>Looking for something to make? Every one of these can be done with the API above:</p>
+  <ul>
+    <li><b>Autopilots:</b> altitude hold, position hold, GPS rescue (fly home and land), a waypoint mission, "follow that drone" in multiplayer.</li>
+    <li><b>Game modes:</b> ring races, a slalom, tag in multiplayer, a precision-landing challenge, deliveries between two spots, a crash-free streak score.</li>
+    <li><b>Training:</b> a hover trainer that scores how still you hold, a stick display, a throttle-control meter, a power-loop coach that checks your height.</li>
+    <li><b>Physics toys:</b> Moon or Jupiter gravity, slow motion, a turbo button, a heavy-payload mode, infinite battery, a speed unlocker.</li>
+    <li><b>Tools:</b> a ghost of your best run, lap timers on any map, a speed trap, a flight logger that saves CSV, a drone trail, waypoints and teleports.</li>
+    <li><b>Look and sound:</b> new HUD styles, a sports-caster voice for tricks, new colours for the whole game with <code>ui.css</code>.</li>
+  </ul>
+
+  <h2 id="types">Autocomplete in your editor (types)</h2>
+  <p>Download <a href="plugins/flysim-plugin.d.ts" download>flysim-plugin.d.ts</a>, put it next to your plugin, and add this line at the top of the plugin. Editors like <a href="https://code.visualstudio.com/">VS Code</a> then show every API function with its description as you type.</p>
+<pre><code><span class="c">/** @param {import('./flysim-plugin').PluginApi} api */</span>
+<span class="k">export default function</span> (api) { … }</code></pre>
+
+  <h2 id="debug">Debugging</h2>
+  <ul>
+    <li>If a plugin fails to start, or keeps throwing errors, the message shows on its card in the Plugins tab.</li>
+    <li><b>Windows app:</b> press <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>F12</kbd> to open the developer tools. The Console shows <code>api.log</code> output and full errors with line numbers.</li>
+    <li><b>Web version:</b> <kbd>F12</kbd> in your browser.</li>
+    <li>Edit your file, add it again (same <code>id</code> replaces it), and it restarts with the changes.</li>
+  </ul>
+</main>
+</div>
+<footer>FPV Sim · <a href="index.html">Home</a> · <a href="https://github.com/guyka2212/fpv-sim">GitHub</a> · <a href="https://guyka2212.github.io/flysim-servers/">Servers</a></footer>
+</body>
+</html>
